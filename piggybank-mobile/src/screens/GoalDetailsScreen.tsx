@@ -246,19 +246,67 @@ const GoalDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
                 onClose={() => setWithdrawModalVisible(false)}
                 title="Withdraw from Goal"
             >
-                <Input
-                    label="Amount"
-                    value={amount}
-                    onChangeText={setAmount}
-                    placeholder="Enter amount"
-                    keyboardType="numeric"
-                />
+                <Text style={styles.modalDescription}>Choose how you want to withdraw:</Text>
+
                 <Button
-                    title="Withdraw"
-                    onPress={handleWithdrawMoney}
-                    loading={processing}
-                    style={styles.modalButton}
+                    title="💳 Withdraw to Wallet"
+                    onPress={() => {
+                        setWithdrawModalVisible(false);
+                        // Show amount input for wallet withdrawal
+                        Alert.prompt(
+                            'Withdraw to Wallet',
+                            'Enter amount to withdraw:',
+                            [
+                                { text: 'Cancel', style: 'cancel' },
+                                {
+                                    text: 'Withdraw',
+                                    onPress: async (inputAmount) => {
+                                        const amountNum = parseFloat(inputAmount || '0');
+                                        if (!amountNum || amountNum <= 0) {
+                                            Alert.alert('Invalid Amount', 'Please enter a valid amount');
+                                            return;
+                                        }
+                                        if (goal && amountNum > goal.saved) {
+                                            Alert.alert('Insufficient Funds', 'You don\'t have enough in this goal');
+                                            return;
+                                        }
+                                        setProcessing(true);
+                                        try {
+                                            await apiService.withdrawFromGoal(goalId, amountNum);
+                                            Alert.alert('Success', 'Money withdrawn to wallet!');
+                                            fetchGoalDetails();
+                                        } catch (error: any) {
+                                            Alert.alert('Error', error.message || 'Failed to withdraw money');
+                                        } finally {
+                                            setProcessing(false);
+                                        }
+                                    },
+                                },
+                            ],
+                            'plain-text',
+                            '',
+                            'numeric'
+                        );
+                    }}
+                    style={styles.withdrawOption}
                 />
+
+                <Button
+                    title="📱 Scan QR to Pay"
+                    onPress={() => {
+                        setWithdrawModalVisible(false);
+                        navigation.navigate('QRScanner', { goalId });
+                    }}
+                    variant="secondary"
+                    style={styles.withdrawOption}
+                />
+
+                <TouchableOpacity
+                    style={styles.cancelModalButton}
+                    onPress={() => setWithdrawModalVisible(false)}
+                >
+                    <Text style={styles.cancelModalButtonText}>Cancel</Text>
+                </TouchableOpacity>
             </Modal>
         </SafeAreaView>
     );
@@ -374,6 +422,25 @@ const styles = StyleSheet.create({
     },
     modalButton: {
         marginTop: 8,
+    },
+    modalDescription: {
+        fontSize: 14,
+        color: colors.textSecondary,
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    withdrawOption: {
+        marginBottom: 12,
+    },
+    cancelModalButton: {
+        marginTop: 8,
+        padding: 12,
+        alignItems: 'center',
+    },
+    cancelModalButtonText: {
+        fontSize: 14,
+        color: colors.textSecondary,
+        fontWeight: '600',
     },
 });
 

@@ -5,6 +5,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import DashboardScreen from '../screens/DashboardScreen';
 import GoalsScreen from '../screens/GoalsScreen';
 import GoalDetailsScreen from '../screens/GoalDetailsScreen';
+import QRScannerScreen from '../screens/QRScannerScreen';
+import QRPaymentScreen from '../screens/QRPaymentScreen';
 import ExpensesScreen from '../screens/ExpensesScreen';
 import InsightsScreen from '../screens/InsightsScreen';
 import PaymentsScreen from '../screens/PaymentsScreen';
@@ -25,6 +27,8 @@ export type MainTabParamList = {
 export type GoalsStackParamList = {
     GoalsList: undefined;
     GoalDetails: { goalId: string };
+    QRScanner: { goalId: string };
+    QRPayment: { goalId: string; qrData: string };
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -42,6 +46,16 @@ const GoalsNavigator: React.FC = () => {
                 name="GoalDetails"
                 component={GoalDetailsScreen}
                 options={{ title: 'Goal Details' }}
+            />
+            <GoalsStack.Screen
+                name="QRScanner"
+                component={QRScannerScreen}
+                options={{ headerShown: false }}
+            />
+            <GoalsStack.Screen
+                name="QRPayment"
+                component={QRPaymentScreen}
+                options={{ title: 'QR Payment' }}
             />
         </GoalsStack.Navigator>
     );

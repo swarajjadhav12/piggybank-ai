@@ -182,6 +182,13 @@ class ApiService {
         });
     }
 
+    async payFromGoalWithQR(id: string, amount: number, qrData: string) {
+        return this.request(`/payments/qr-payment`, {
+            method: 'POST',
+            body: JSON.stringify({ goalId: id, amount, qrData }),
+        });
+    }
+
     async getGoalProgress() {
         return this.request('/goals/progress');
     }

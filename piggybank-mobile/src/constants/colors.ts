@@ -41,6 +41,7 @@ export const colors = {
     background: '#ffffff',
     backgroundSecondary: '#f9fafb',
     backgroundDark: '#111827',
+    card: '#ffffff',
 
     // Text colors
     text: '#111827',
