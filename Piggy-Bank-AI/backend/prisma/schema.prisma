@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  phone     String?  @unique
+  password  String
+  firstName String?
+  lastName  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  goals     Goal[]
+  expenses  Expense[]
+  savings   Saving[]
+  insights  AIInsight[]
+  wallet    Wallet?
+
+  @@map("users")
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  target      Float
+  saved       Float   @default(0)
+  targetDate  DateTime
+  priority    Priority @default(MEDIUM)
+  emoji       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("goals")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  category    String
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("expenses")
+}
+
+model Saving {
+  id        String   @id @default(cuid())
+  amount    Float
+  type      SavingType
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("savings")
+}
+
+model AIInsight {
+  id              String        @id @default(cuid())
+  type            InsightType
+  title           String
+  description     String
+  potentialSavings Float?
+  impact          Impact        @default(MEDIUM)
+  isRead          Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_insights")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum SavingType {
+  MANUAL
+  AUTOMATIC
+  ROUND_UP
+  GOAL_CONTRIBUTION
+}
+
+enum InsightType {
+  SAVING
+  SPENDING
+  WARNING
+  GOAL
+  ACHIEVEMENT
+}
+
+enum Impact {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  balance   Float    @default(0)
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionsSent    Transaction[] @relation("SenderTransactions")
+  transactionsReceived Transaction[] @relation("ReceiverTransactions")
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id            String       @id @default(cuid())
+  amount        Float
+  currency      String       @default("USD")
+  type          TransactionType
+  status        TransactionStatus @default(COMPLETED)
+  description   String?
+  createdAt     DateTime     @default(now())
+
+  // Relations
+  senderWalletId   String?
+  senderWallet     Wallet?    @relation("SenderTransactions", fields: [senderWalletId], references: [id], onDelete: SetNull)
+  receiverWalletId String?
+  receiverWallet   Wallet?    @relation("ReceiverTransactions", fields: [receiverWalletId], references: [id], onDelete: SetNull)
+
+  // For convenience to query by user
+  senderUserId   String?
+  receiverUserId String?
+
+  @@map("transactions")
+}
+
+enum TransactionType {
+  TRANSFER
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
